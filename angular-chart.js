@@ -2,9 +2,7 @@
   'use strict';
   if (typeof exports === 'object') {
     // Node/CommonJS
-    module.exports = factory(
-      typeof angular !== 'undefined' ? angular : require('angular'),
-      typeof Chart !== 'undefined' ? Chart : require('chart.js'));
+    module.exports = factory(require('angular'), require('Chart.js'));
   }  else if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
     define(['angular', 'chart'], factory);
@@ -16,6 +14,15 @@
   'use strict';
 
   Chart.defaults.global.responsive = true;
+  Chart.defaults.global.title.display = false;
+  Chart.defaults.global.legend.position = 'bottom';
+  Chart.defaults.global.hover.mode = 'label';
+  Chart.defaults.global.tooltips.mode = 'label';
+  Chart.defaults.global.tooltips.titleFontSize = 14;
+  Chart.defaults.global.tooltips.bodyFontSize = 14;
+  Chart.defaults.global.legend.labels.fontSize = 16;
+  Chart.defaults.global.legend.labels.fontFamily = 'Arial';
+  Chart.defaults.global.elements.point.radius = 4;
   Chart.defaults.global.multiTooltipTemplate = '<%if (datasetLabel){%><%=datasetLabel%>: <%}%><%= value %>';
 
   Chart.defaults.global.colours = [
@@ -38,12 +45,12 @@
     .provider('ChartJs', ChartJsProvider)
     .factory('ChartJsFactory', ['ChartJs', '$timeout', ChartJsFactory])
     .directive('chartBase', function (ChartJsFactory) { return new ChartJsFactory(); })
-    .directive('chartLine', function (ChartJsFactory) { return new ChartJsFactory('Line'); })
-    .directive('chartBar', function (ChartJsFactory) { return new ChartJsFactory('Bar'); })
-    .directive('chartRadar', function (ChartJsFactory) { return new ChartJsFactory('Radar'); })
-    .directive('chartDoughnut', function (ChartJsFactory) { return new ChartJsFactory('Doughnut'); })
-    .directive('chartPie', function (ChartJsFactory) { return new ChartJsFactory('Pie'); })
-    .directive('chartPolarArea', function (ChartJsFactory) { return new ChartJsFactory('PolarArea'); });
+    .directive('chartLine', function (ChartJsFactory) { return new ChartJsFactory('line'); })
+    .directive('chartBar', function (ChartJsFactory) { return new ChartJsFactory('bar'); })
+    .directive('chartRadar', function (ChartJsFactory) { return new ChartJsFactory('radar'); })
+    .directive('chartDoughnut', function (ChartJsFactory) { return new ChartJsFactory('doughnut'); })
+    .directive('chartPie', function (ChartJsFactory) { return new ChartJsFactory('pie'); })
+    .directive('chartPolarArea', function (ChartJsFactory) { return new ChartJsFactory('polarArea'); });
 
   /**
    * Wrapper for chart.js
@@ -192,14 +199,14 @@
               getDataSets(scope.labels, scope.data, scope.series || [], scope.colours) :
               getData(scope.labels, scope.data, scope.colours);
             var options = angular.extend({}, ChartJs.getOptions(type), scope.options);
-            chart = new ChartJs.Chart(ctx)[type](data, options);
+            chart = new ChartJs.Chart(ctx, { type: type, data: data, options: options });
             scope.$emit('create', chart);
 
             // Bind events
             cvs.onclick = scope.click ? getEventHandler(scope, chart, 'click', false) : angular.noop;
             cvs.onmousemove = scope.hover ? getEventHandler(scope, chart, 'hover', true) : angular.noop;
 
-            if (scope.legend && scope.legend !== 'false') setLegend(elem, chart);
+//            if (scope.legend && scope.legend !== 'false') setLegend(elem, chart);
           }
 
           function deprecated (attr) {
@@ -268,12 +275,12 @@
 
     function getColour (colour) {
       return {
-        fillColor: rgba(colour, 0.2),
-        strokeColor: rgba(colour, 1),
-        pointColor: rgba(colour, 1),
-        pointStrokeColor: '#fff',
-        pointHighlightFill: '#fff',
-        pointHighlightStroke: rgba(colour, 0.8)
+        backgroundColor: rgba(colour, 0.2),
+        borderColor: rgba(colour, 1),
+        pointBackgroundColor: rgba(colour, 1),
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: rgba(colour, 0.8)
       };
     }
 
@@ -306,7 +313,8 @@
         datasets: data.map(function (item, i) {
           return angular.extend({}, colours[i], {
             label: series[i],
-            data: item
+            data: item,
+	    pointBorderWidth: 1
           });
         })
       };
